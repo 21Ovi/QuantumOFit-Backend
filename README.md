@@ -2,14 +2,6 @@
 
 Welcome to QuantumOFit-Backend, the powerhouse behind QuantumOFit - a revolutionary fitness application that integrates AI for personalized fitness predictions.
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#features)
-- [Getting Started](#getting-started)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## Introduction
 
 QuantumOFit is not just a fitness app; it's a paradigm shift. Our backend, built with Node.js, TypeScript, and Express, forms the backbone of a system that combines traditional fitness tracking with the power of AI. This repository holds the code for the backend server, seamlessly connecting with PostgreSQL for robust data management and leveraging TensorFlow for personalized fitness insights.
