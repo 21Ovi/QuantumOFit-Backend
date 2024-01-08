@@ -4,6 +4,7 @@ import {
   loginUser,
   registerUser,
   logoutUser,
+  registerGym,
 } from "../controllers/auth-controller";
 
 const router = express.Router();
@@ -13,7 +14,7 @@ router.post("/login", loginUser);
 
 // Register route
 router.post("/register", registerUser);
-
+router.post("/gym/register", registerGym);
 // Logout route
 router.post("/logout", logoutUser);
 
