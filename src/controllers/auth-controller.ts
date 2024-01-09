@@ -155,7 +155,7 @@ export const registerUser = async (
     // Generate a JWT token for authentication
     const token = jwt.sign(
       { userId: userResult.rows[0].id, email: userResult.rows[0].email },
-      "quantumtoaifitness", // Replace with a secure secret key
+      "quantumtoaifitness",
       { expiresIn: "48h" }
     );
 
