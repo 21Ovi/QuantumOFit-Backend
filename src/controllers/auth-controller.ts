@@ -4,11 +4,21 @@ import jwt from "jsonwebtoken";
 import pool from "../db/db"; // Adjust the path based on your project structure
 
 interface User {
-  user_role: string;
   id: number;
+  username: string;
   email: string;
   password: string;
-  // Add other user properties as needed
+  full_name: string;
+  date_of_birth?: Date;
+  weight?: number;
+  height?: number;
+  access_scope?: string;
+  gym_membership?: boolean;
+  created_at: Date;
+  updated_at: Date;
+  gym_id?: number;
+  user_role?: string;
+  address_id?: number;
 }
 
 export const registerGym = async (
@@ -16,7 +26,6 @@ export const registerGym = async (
   res: Response
 ): Promise<void> => {
   try {
-    // Extract gym details including address from the request body
     const {
       name,
       location,
@@ -94,50 +103,68 @@ export const registerUser = async (
   res: Response
 ): Promise<void> => {
   try {
+    // Extract user details from the request body
     const {
       username,
       email,
       password,
-      fullName,
-      dateOfBirth,
+      full_name,
+      date_of_birth,
       weight,
       height,
-      gymId,
+      access_scope,
+      gym_membership,
+      gym_id,
+      user_role,
+      address_id,
     } = req.body;
 
-    // Check if the user with the provided email already exists
-    const existingUser = await pool.query(
+    // Check if the user with the given email already exists
+    const existingUser = await pool.query<User>(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
 
     if (existingUser.rows.length > 0) {
-      res
-        .status(400)
-        .json({ error: "User with the provided email already exists" });
+      res.status(400).json({ error: "User with this email already exists" });
+      return;
     }
 
     // Hash the password before storing it in the database
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert the new user into the users table
-    const newUser = await pool.query(
-      "INSERT INTO users (username, email, password, full_name, date_of_birth, weight, height, gym_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+    // Insert the user details into the users table
+    const userResult = await pool.query<User>(
+      "INSERT INTO users (username, email, password, full_name, date_of_birth, weight, height, access_scope, gym_membership, gym_id, user_role, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
       [
         username,
         email,
         hashedPassword,
-        fullName,
-        dateOfBirth,
+        full_name,
+        date_of_birth,
         weight,
         height,
-        gymId,
+        access_scope,
+        gym_membership,
+        gym_id,
+        user_role,
+        address_id,
       ]
     );
 
-    res
-      .status(201)
-      .json({ message: "User registration successful", user: newUser.rows[0] });
+    // Generate a JWT token for authentication
+    const token = jwt.sign(
+      { userId: userResult.rows[0].id, email: userResult.rows[0].email },
+      "quantumtoaifitness", // Replace with a secure secret key
+      { expiresIn: "48h" }
+    );
+
+    // Send the registered user details and token in the response
+    res.status(201).json({
+      message: "User registered successfully",
+      user: userResult.rows[0],
+      token,
+    });
   } catch (error) {
     console.error("Error during user registration:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -162,11 +189,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const user: User = userResult.rows[0];
 
     // Compare the provided password with the hashed password in the database
-    const encryptionChecked = await bcrypt.compare(password, user.password);
-    const basicCheck = user.password === password;
-
-    const checkPassword =
-      user.user_role === "superadmin" ? basicCheck : encryptionChecked;
+    const checkPassword = await bcrypt.compare(password, user.password);
 
     if (!checkPassword) {
       res.status(401).json({ error: "Invalid email or password" });
